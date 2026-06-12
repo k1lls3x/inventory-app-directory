@@ -11,6 +11,7 @@ import (
 	"inventory-app/backend/internal/repository"
 	"inventory-app/backend/internal/service"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -119,6 +120,35 @@ func (a *App) ChangeStock(itemID, warehouseID, newQuantity int) error {
 }
 func (a *App) GetWeeklyStockTrend() ([]model.DailyStock, error) {
 	return a.stockService.GetWeeklyStockTrend(a.ctx)
+}
+
+func (a *App) TransferStock(itemID, fromWarehouseID, toWarehouseID, quantity int, transferredAtStr, note string) error {
+	var transferredAt time.Time
+	var err error
+	if transferredAtStr != "" {
+		transferredAt, err = time.Parse("2006-01-02", transferredAtStr)
+		if err != nil {
+			return fmt.Errorf("invalid date format, expected YYYY-MM-DD: %w", err)
+		}
+	}
+
+	var notePtr *string
+	if strings.TrimSpace(note) != "" {
+		notePtr = &note
+	}
+
+	return a.stockService.TransferStock(a.ctx, model.StockTransfer{
+		ItemID:          itemID,
+		FromWarehouseID: fromWarehouseID,
+		ToWarehouseID:   toWarehouseID,
+		Quantity:        quantity,
+		TransferredAt:   transferredAt,
+		Note:            notePtr,
+	})
+}
+
+func (a *App) GetStockTransfers() ([]model.StockTransferDetails, error) {
+	return a.stockService.GetStockTransfers(a.ctx)
 }
 
 func (a *App) ExportStockToExcel() (string, error) {
@@ -272,7 +302,7 @@ func (a *App) GetOutboundDetails() ([]model.OutboundDetails, error) {
 	return a.outboundService.GetOutboundDetails(a.ctx)
 }
 
-func (a *App) AddOutbound(itemID int, quantity int, shippedAtStr string, destination string, warehouseID int) error {
+func (a *App) AddOutbound(itemID int, quantity int, shippedAtStr string, destination string, warehouseID int, shippedBy int, documentNo string, note string) error {
 	var shippedAt time.Time
 	var err error
 	if shippedAtStr != "" {
@@ -281,11 +311,26 @@ func (a *App) AddOutbound(itemID int, quantity int, shippedAtStr string, destina
 			return fmt.Errorf("invalid date format, expected YYYY-MM-DD: %w", err)
 		}
 	}
+	var shippedByPtr *int
+	if shippedBy > 0 {
+		shippedByPtr = &shippedBy
+	}
+	var documentNoPtr *string
+	if strings.TrimSpace(documentNo) != "" {
+		documentNoPtr = &documentNo
+	}
+	var notePtr *string
+	if strings.TrimSpace(note) != "" {
+		notePtr = &note
+	}
 	return a.outboundService.AddOutbound(a.ctx, model.Outbound{
 		ItemID:      itemID,
 		Quantity:    quantity,
 		ShippedAt:   shippedAt,
+		ShippedBy:   shippedByPtr,
 		Destination: &destination,
+		DocumentNo:  documentNoPtr,
+		Note:        notePtr,
 		WarehouseID: warehouseID,
 	})
 }
@@ -297,6 +342,9 @@ func (a *App) EditOutbound(
 	destination string,
 	warehouseID int,
 	outboundID int,
+	shippedBy int,
+	documentNo string,
+	note string,
 ) error {
 	var shippedAt time.Time
 	var err error
@@ -306,12 +354,27 @@ func (a *App) EditOutbound(
 			return fmt.Errorf("invalid date %q, expected YYYY-MM-DD: %w", shippedAtStr, err)
 		}
 	}
+	var shippedByPtr *int
+	if shippedBy > 0 {
+		shippedByPtr = &shippedBy
+	}
+	var documentNoPtr *string
+	if strings.TrimSpace(documentNo) != "" {
+		documentNoPtr = &documentNo
+	}
+	var notePtr *string
+	if strings.TrimSpace(note) != "" {
+		notePtr = &note
+	}
 	return a.outboundService.EditOutbound(a.ctx, model.Outbound{
 		OutboundID:  outboundID,
 		ItemID:      itemID,
 		Quantity:    quantity,
 		ShippedAt:   shippedAt,
+		ShippedBy:   shippedByPtr,
 		Destination: &destination,
+		DocumentNo:  documentNoPtr,
+		Note:        notePtr,
 		WarehouseID: warehouseID,
 	})
 }

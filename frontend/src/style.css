@@ -282,7 +282,7 @@ main {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 1.03rem;
+  font-size: 0.95rem;
   margin-bottom: 0;
   border-radius: 12px;
   overflow: hidden;
@@ -321,8 +321,8 @@ main {
   border: 1.5px solid #ececec;
   background: #fff;
   border-radius: 8px;
-  padding: 0.35rem 0.74rem;
-  font-size: 1.17rem;
+  padding: 0.22rem 0.48rem;
+  font-size: 0.96rem;
   cursor: pointer;
   transition:
     background 0.18s,
@@ -611,10 +611,11 @@ select.input:focus {
 
 .table-section td, .table-section th {
   font-family: 'Nunito', Arial, sans-serif;
-  font-size: 1.07rem;
-  line-height: 1.27;
+  font-size: 0.95rem;
+  line-height: 1.18;
   font-weight: 500;
   letter-spacing: 0.01em;
+  white-space: nowrap;
   transition: background 0.18s, color 0.16s, box-shadow 0.17s;
 }
 
@@ -623,9 +624,9 @@ select.input:focus {
   background: #23242a !important;
   color: #fff !important;
   font-weight: 800;
-  font-size: 1.12rem;
+  font-size: 0.96rem;
   border-bottom: 2px solid #23242a;
-  padding: 13px 14px;
+  padding: 9px 12px;
   text-align: left;
 }
 
@@ -640,12 +641,15 @@ select.input:focus {
 /* Тело таблицы */
 .table-section td {
   color: #23242a;
-  font-size: 1.07rem;
+  font-size: 0.95rem;
   font-weight: 500;
   background: #fff;
-  padding: 13px 14px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1.2px solid #f0f3fa;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Ховер по строке */

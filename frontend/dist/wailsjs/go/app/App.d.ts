@@ -8,7 +8,7 @@ export function AddInboundTx(arg1:model.Inbound,arg2:model.Item):Promise<void>;
 
 export function AddItem(arg1:model.Item):Promise<void>;
 
-export function AddOutbound(arg1:number,arg2:number,arg3:string,arg4:string,arg5:number):Promise<void>;
+export function AddOutbound(arg1:number,arg2:number,arg3:string,arg4:string,arg5:number,arg6:number,arg7:string,arg8:string):Promise<void>;
 
 export function AddStock(arg1:number,arg2:number,arg3:number):Promise<void>;
 
@@ -26,7 +26,7 @@ export function DeleteInbound(arg1:number):Promise<void>;
 
 export function EditInbound(arg1:model.Inbound):Promise<void>;
 
-export function EditOutbound(arg1:number,arg2:number,arg3:string,arg4:string,arg5:number,arg6:number):Promise<void>;
+export function EditOutbound(arg1:number,arg2:number,arg3:string,arg4:string,arg5:number,arg6:number,arg7:number,arg8:string,arg9:string):Promise<void>;
 
 export function EditSupplier(arg1:model.Supplier):Promise<void>;
 
@@ -62,6 +62,8 @@ export function GetOutboundDetails():Promise<Array<model.OutboundDetails>>;
 
 export function GetStockDetails():Promise<Array<model.ItemWithStock>>;
 
+export function GetStockTransfers():Promise<Array<model.StockTransferDetails>>;
+
 export function GetStocks():Promise<Array<model.Stock>>;
 
 export function GetSuppliers():Promise<Array<model.Supplier>>;
@@ -89,5 +91,7 @@ export function RemoveStock(arg1:number):Promise<void>;
 export function RemoveSupplier(arg1:number):Promise<void>;
 
 export function RemoveUser(arg1:number):Promise<void>;
+
+export function TransferStock(arg1:number,arg2:number,arg3:number,arg4:number,arg5:string,arg6:string):Promise<void>;
 
 export function UpdateItem(arg1:model.Item):Promise<void>;

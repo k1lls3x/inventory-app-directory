@@ -46,6 +46,11 @@ CREATE TABLE IF NOT EXISTS inbound (
     warehouse_id   INTEGER REFERENCES warehouse(warehouse_id)
 );
 
+ALTER TABLE inbound
+  ADD COLUMN IF NOT EXISTS received_by INTEGER REFERENCES "User"(user_id),
+  ADD COLUMN IF NOT EXISTS document_no VARCHAR(80),
+  ADD COLUMN IF NOT EXISTS note TEXT;
+
 -- Отгрузки (outbound)
 CREATE TABLE IF NOT EXISTS outbound (
     outbound_id    SERIAL PRIMARY KEY,
@@ -56,6 +61,10 @@ CREATE TABLE IF NOT EXISTS outbound (
     warehouse_id   INTEGER REFERENCES warehouse(warehouse_id)
 );
 
+ALTER TABLE outbound
+  ADD COLUMN IF NOT EXISTS shipped_by INTEGER REFERENCES "User"(user_id),
+  ADD COLUMN IF NOT EXISTS document_no VARCHAR(80),
+  ADD COLUMN IF NOT EXISTS note TEXT;
 
 -- Остатки
 CREATE TABLE IF NOT EXISTS stock (
@@ -90,3 +99,21 @@ ALTER TABLE supplier
   ADD COLUMN IF NOT EXISTS contact_person VARCHAR(100),
   ADD COLUMN IF NOT EXISTS phone VARCHAR(32),
   ADD COLUMN IF NOT EXISTS email VARCHAR(64);
+
+-- Межскладские перемещения
+CREATE TABLE IF NOT EXISTS stock_transfer (
+    transfer_id       SERIAL PRIMARY KEY,
+    item_id           INTEGER NOT NULL REFERENCES item(item_id),
+    from_warehouse_id INTEGER NOT NULL REFERENCES warehouse(warehouse_id),
+    to_warehouse_id   INTEGER NOT NULL REFERENCES warehouse(warehouse_id),
+    quantity          INTEGER NOT NULL CHECK (quantity > 0),
+    transferred_at    TIMESTAMP DEFAULT now(),
+    note              TEXT,
+    CHECK (from_warehouse_id <> to_warehouse_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_transfer_date
+  ON stock_transfer (transferred_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_stock_transfer_item
+  ON stock_transfer (item_id);

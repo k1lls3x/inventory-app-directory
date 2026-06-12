@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 )
+
 type MovementRepository interface {
 	GetAllMovementsThisMonth(ctx context.Context) ([]model.Movement, error)
 }
@@ -23,7 +24,7 @@ func NewMovementRepository(db *sqlx.DB, log zerolog.Logger) *PgMovementRepositor
 	}
 }
 func (r *PgMovementRepository) GetAllMovementsThisMonth(ctx context.Context) ([]model.Movement, error) {
-		query := `
+	query := `
 		 SELECT
   i.inbound_id      AS movement_id,
   'inbound'         AS type,
@@ -62,6 +63,27 @@ FROM outbound o
 JOIN item      it ON o.item_id      = it.item_id
 JOIN warehouse w  ON o.warehouse_id = w.warehouse_id
 WHERE o.shipped_at >= date_trunc('month', CURRENT_DATE)
+
+UNION ALL
+
+SELECT
+  t.transfer_id      AS movement_id,
+  'transfer'         AS type,
+  t.item_id          AS item_id,
+  it.name            AS item_name,
+  t.quantity,
+  t.transferred_at   AS date,
+  t.from_warehouse_id AS warehouse_id,
+  wf.name || ' → ' || wt.name AS warehouse_name,
+  NULL               AS supplier_id,
+  NULL               AS supplier_name,
+  COALESCE(t.note, '') AS destination,
+  NULL               AS shipped_at
+FROM stock_transfer t
+JOIN item it ON t.item_id = it.item_id
+JOIN warehouse wf ON t.from_warehouse_id = wf.warehouse_id
+JOIN warehouse wt ON t.to_warehouse_id = wt.warehouse_id
+WHERE t.transferred_at >= date_trunc('month', CURRENT_DATE)
 
 ORDER BY date DESC;
 	`

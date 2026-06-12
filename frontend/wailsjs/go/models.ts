@@ -39,6 +39,9 @@ export namespace model {
 	    quantity: number;
 	    // Go type: time
 	    received_at: any;
+	    received_by?: number;
+	    document_no?: string;
+	    note?: string;
 	    warehouse_id: number;
 	
 	    static createFrom(source: any = {}) {
@@ -52,6 +55,9 @@ export namespace model {
 	        this.supplier_id = source["supplier_id"];
 	        this.quantity = source["quantity"];
 	        this.received_at = this.convertValues(source["received_at"], null);
+	        this.received_by = source["received_by"];
+	        this.document_no = source["document_no"];
+	        this.note = source["note"];
 	        this.warehouse_id = source["warehouse_id"];
 	    }
 	
@@ -75,12 +81,20 @@ export namespace model {
 	}
 	export class InboundDetails {
 	    inbound_id: number;
+	    item_id: number;
+	    supplier_id: number;
+	    warehouse_id: number;
+	    received_by?: number;
 	    date: string;
+	    received_at: string;
 	    name: string;
 	    sku: string;
 	    supplier: string;
 	    quantity: number;
 	    warehouse: string;
+	    receiver_name: string;
+	    document_no: string;
+	    note: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new InboundDetails(source);
@@ -89,12 +103,20 @@ export namespace model {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.inbound_id = source["inbound_id"];
+	        this.item_id = source["item_id"];
+	        this.supplier_id = source["supplier_id"];
+	        this.warehouse_id = source["warehouse_id"];
+	        this.received_by = source["received_by"];
 	        this.date = source["date"];
+	        this.received_at = source["received_at"];
 	        this.name = source["name"];
 	        this.sku = source["sku"];
 	        this.supplier = source["supplier"];
 	        this.quantity = source["quantity"];
 	        this.warehouse = source["warehouse"];
+	        this.receiver_name = source["receiver_name"];
+	        this.document_no = source["document_no"];
+	        this.note = source["note"];
 	    }
 	}
 	export class JSONNullFloat64 {
@@ -297,12 +319,19 @@ export namespace model {
 	}
 	export class OutboundDetails {
 	    outbound_id: number;
+	    item_id: number;
+	    warehouse_id: number;
+	    shipped_by?: number;
 	    date: string;
+	    shipped_at: string;
 	    name: string;
 	    sku: string;
 	    destination: string;
 	    quantity: number;
 	    warehouse: string;
+	    shipper_name: string;
+	    document_no: string;
+	    note: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new OutboundDetails(source);
@@ -311,12 +340,19 @@ export namespace model {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.outbound_id = source["outbound_id"];
+	        this.item_id = source["item_id"];
+	        this.warehouse_id = source["warehouse_id"];
+	        this.shipped_by = source["shipped_by"];
 	        this.date = source["date"];
+	        this.shipped_at = source["shipped_at"];
 	        this.name = source["name"];
 	        this.sku = source["sku"];
 	        this.destination = source["destination"];
 	        this.quantity = source["quantity"];
 	        this.warehouse = source["warehouse"];
+	        this.shipper_name = source["shipper_name"];
+	        this.document_no = source["document_no"];
+	        this.note = source["note"];
 	    }
 	}
 	export class Stock {
@@ -357,6 +393,38 @@ export namespace model {
 		    }
 		    return a;
 		}
+	}
+	export class StockTransferDetails {
+	    transfer_id: number;
+	    item_id: number;
+	    from_warehouse_id: number;
+	    to_warehouse_id: number;
+	    date: string;
+	    item_name: string;
+	    sku: string;
+	    from_warehouse: string;
+	    to_warehouse: string;
+	    quantity: number;
+	    note: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new StockTransferDetails(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.transfer_id = source["transfer_id"];
+	        this.item_id = source["item_id"];
+	        this.from_warehouse_id = source["from_warehouse_id"];
+	        this.to_warehouse_id = source["to_warehouse_id"];
+	        this.date = source["date"];
+	        this.item_name = source["item_name"];
+	        this.sku = source["sku"];
+	        this.from_warehouse = source["from_warehouse"];
+	        this.to_warehouse = source["to_warehouse"];
+	        this.quantity = source["quantity"];
+	        this.note = source["note"];
+	    }
 	}
 	export class Supplier {
 	    supplier_id: number;

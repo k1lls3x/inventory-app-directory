@@ -24,7 +24,7 @@ func ExportDeliveriesToExcel(inboundService *service.InboundService, logger zero
 	f.SetActiveSheet(index)
 	f.DeleteSheet("Sheet1")
 
-	headers := []string{"Дата", "Наименование", "SKU", "Склад", "Поставщик", "Количество"}
+	headers := []string{"Дата", "Документ", "Наименование", "SKU", "Куда", "От кого", "Принял", "Количество", "Комментарий"}
 	headerStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#D9E1F2"}, Pattern: 1},
@@ -46,7 +46,7 @@ func ExportDeliveriesToExcel(inboundService *service.InboundService, logger zero
 		},
 	})
 
-	f.SetColWidth(sheet, "A", "F", 22)
+	f.SetColWidth(sheet, "A", "I", 22)
 
 	for col, header := range headers {
 		cell, _ := excelize.CoordinatesToCellName(col+1, 1)
@@ -55,7 +55,7 @@ func ExportDeliveriesToExcel(inboundService *service.InboundService, logger zero
 	}
 
 	for rowIdx, d := range deliveries {
-		values := []interface{}{d.Date, d.Name, d.Sku, d.Warehouse, d.Supplier, d.Quantity}
+		values := []interface{}{d.Date, d.DocumentNo, d.Name, d.Sku, d.Warehouse, d.Supplier, d.ReceiverName, d.Quantity, d.Note}
 		for colIdx, val := range values {
 			cell, _ := excelize.CoordinatesToCellName(colIdx+1, rowIdx+2)
 			f.SetCellValue(sheet, cell, val)
@@ -66,7 +66,7 @@ func ExportDeliveriesToExcel(inboundService *service.InboundService, logger zero
 	showStripes := true
 	lastRow := len(deliveries) + 1
 	table := &excelize.Table{
-		Range:          fmt.Sprintf("A1:F%d", lastRow),
+		Range:          fmt.Sprintf("A1:I%d", lastRow),
 		Name:           "DeliveriesTable",
 		StyleName:      "TableStyleMedium9",
 		ShowRowStripes: &showStripes,

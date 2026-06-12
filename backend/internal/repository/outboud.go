@@ -31,15 +31,23 @@ func (r *PgOutboundRepository) GetOutboundDetails(ctx context.Context) ([]model.
 	query := `
 		SELECT
 			o.outbound_id,
+			o.item_id,
+			o.warehouse_id,
+			o.shipped_by,
 			to_char(o.shipped_at, 'YYYY-MM-DD') AS date,
+			to_char(o.shipped_at, 'YYYY-MM-DD') AS shipped_at,
 			it.name AS name,
 			it.sku AS sku,
 			o.destination AS destination,
 			o.quantity AS quantity,
-			w.name AS warehouse
+			w.name AS warehouse,
+			COALESCE(NULLIF(u.full_name, ''), u.username, '') AS shipper_name,
+			COALESCE(o.document_no, '') AS document_no,
+			COALESCE(o.note, '') AS note
 		FROM outbound o
 		JOIN item it       ON o.item_id = it.item_id
 		JOIN warehouse w   ON o.warehouse_id = w.warehouse_id
+		LEFT JOIN "User" u ON o.shipped_by = u.user_id
 		ORDER BY o.shipped_at DESC;
 	`
 	err := r.db.SelectContext(ctx, &items, query)
@@ -54,10 +62,10 @@ func (r *PgOutboundRepository) GetOutboundDetails(ctx context.Context) ([]model.
 // Добавить отгрузку
 func (r *PgOutboundRepository) AddOutbound(ctx context.Context, outb model.Outbound) error {
 	query := `
-		INSERT INTO outbound (item_id, quantity, shipped_at, destination, warehouse_id)
-		VALUES ($1, $2, COALESCE($3, now()), $4, $5)
+		INSERT INTO outbound (item_id, quantity, shipped_at, destination, warehouse_id, shipped_by, document_no, note)
+		VALUES ($1, $2, COALESCE($3, now()), $4, $5, $6, $7, $8)
 	`
-	_, err := r.db.ExecContext(ctx, query, outb.ItemID, outb.Quantity, outb.ShippedAt, outb.Destination, outb.WarehouseID)
+	_, err := r.db.ExecContext(ctx, query, outb.ItemID, outb.Quantity, outb.ShippedAt, outb.Destination, outb.WarehouseID, outb.ShippedBy, outb.DocumentNo, outb.Note)
 	if err != nil {
 		r.log.Error().
 			Int("item_id", outb.ItemID).
@@ -78,15 +86,23 @@ func (r *PgOutboundRepository) GetOutboundDetailsByDate(ctx context.Context, dat
 	query := `
 		SELECT
 			o.outbound_id,
-			to_char(o.shipped_at, 'DD.MM.YYYY') AS date,
+			o.item_id,
+			o.warehouse_id,
+			o.shipped_by,
+			to_char(o.shipped_at, 'YYYY-MM-DD') AS date,
+			to_char(o.shipped_at, 'YYYY-MM-DD') AS shipped_at,
 			it.name AS name,
 			it.sku AS sku,
 			o.destination AS destination,
 			o.quantity AS quantity,
-			w.name AS warehouse
+			w.name AS warehouse,
+			COALESCE(NULLIF(u.full_name, ''), u.username, '') AS shipper_name,
+			COALESCE(o.document_no, '') AS document_no,
+			COALESCE(o.note, '') AS note
 		FROM outbound o
 		JOIN item it ON o.item_id = it.item_id
 		JOIN warehouse w ON o.warehouse_id = w.warehouse_id
+		LEFT JOIN "User" u ON o.shipped_by = u.user_id
 		WHERE DATE(o.shipped_at) = $1
 		ORDER BY o.shipped_at DESC;
 	`
@@ -124,10 +140,13 @@ func (r *PgOutboundRepository) EditOutbound(ctx context.Context, outb model.Outb
 			warehouse_id = $2,
 			quantity = $3,
 			shipped_at = $4,
-			destination = $5
-		WHERE outbound_id = $6;
+			destination = $5,
+			shipped_by = $6,
+			document_no = $7,
+			note = $8
+		WHERE outbound_id = $9;
 	`
-	_, err := r.db.ExecContext(ctx, query, outb.ItemID, outb.WarehouseID, outb.Quantity, outb.ShippedAt, outb.Destination, outb.OutboundID)
+	_, err := r.db.ExecContext(ctx, query, outb.ItemID, outb.WarehouseID, outb.Quantity, outb.ShippedAt, outb.Destination, outb.ShippedBy, outb.DocumentNo, outb.Note, outb.OutboundID)
 	if err != nil {
 		r.log.Error().Int("outbound_id", outb.OutboundID).Err(err).Msg("Ошибка при изменении данных отгрузки")
 		return err

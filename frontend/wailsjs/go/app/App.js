@@ -14,8 +14,8 @@ export function AddItem(arg1) {
   return window['go']['app']['App']['AddItem'](arg1);
 }
 
-export function AddOutbound(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['app']['App']['AddOutbound'](arg1, arg2, arg3, arg4, arg5);
+export function AddOutbound(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+  return window['go']['app']['App']['AddOutbound'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 export function AddStock(arg1, arg2, arg3) {
@@ -50,8 +50,8 @@ export function EditInbound(arg1) {
   return window['go']['app']['App']['EditInbound'](arg1);
 }
 
-export function EditOutbound(arg1, arg2, arg3, arg4, arg5, arg6) {
-  return window['go']['app']['App']['EditOutbound'](arg1, arg2, arg3, arg4, arg5, arg6);
+export function EditOutbound(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
+  return window['go']['app']['App']['EditOutbound'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 }
 
 export function EditSupplier(arg1) {
@@ -122,6 +122,10 @@ export function GetStockDetails() {
   return window['go']['app']['App']['GetStockDetails']();
 }
 
+export function GetStockTransfers() {
+  return window['go']['app']['App']['GetStockTransfers']();
+}
+
 export function GetStocks() {
   return window['go']['app']['App']['GetStocks']();
 }
@@ -176,6 +180,10 @@ export function RemoveSupplier(arg1) {
 
 export function RemoveUser(arg1) {
   return window['go']['app']['App']['RemoveUser'](arg1);
+}
+
+export function TransferStock(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['app']['App']['TransferStock'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function UpdateItem(arg1) {

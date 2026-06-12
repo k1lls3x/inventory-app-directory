@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"inventory-app/backend/internal/model"
 	"inventory-app/backend/internal/repository"
 
@@ -44,6 +45,10 @@ func (s *StockService) GetWeeklyStockTrend(ctx context.Context) ([]model.DailySt
 }
 
 func (s *StockService) AddStock(ctx context.Context, itemID, quantity, warehouseID int) error {
+	if quantity < 0 {
+		return fmt.Errorf("quantity must not be negative")
+	}
+
 	err := s.repo.AddStock(ctx, itemID, quantity, warehouseID)
 	if err != nil {
 		s.log.Error().
@@ -70,6 +75,10 @@ func (s *StockService) FindStockByWarehouse(ctx context.Context, warehouseID int
 }
 
 func (s *StockService) ChangeStock(ctx context.Context, itemID, warehouseID, newQuantity int) error {
+	if newQuantity < 0 {
+		return fmt.Errorf("quantity must not be negative")
+	}
+
 	err := s.repo.ChangeStock(ctx, itemID, warehouseID, newQuantity)
 	if err != nil {
 		s.log.Error().
@@ -104,5 +113,87 @@ func (s *StockService) GetStocks(ctx context.Context) ([]model.Stock, error) {
 		return nil, err
 	}
 	s.log.Info().Int("count", len(result)).Msg("Все остатки успешно получены")
+	return result, nil
+}
+
+func (s *StockService) TransferStock(ctx context.Context, transfer model.StockTransfer) error {
+	if transfer.ItemID <= 0 {
+		return fmt.Errorf("item_id must be positive")
+	}
+	if transfer.FromWarehouseID <= 0 || transfer.ToWarehouseID <= 0 {
+		return fmt.Errorf("warehouse_id must be positive")
+	}
+	if transfer.FromWarehouseID == transfer.ToWarehouseID {
+		return fmt.Errorf("нельзя переместить товар на тот же склад")
+	}
+	if transfer.Quantity <= 0 {
+		return fmt.Errorf("quantity must be positive")
+	}
+
+	tx, err := s.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	if err := adjustStockTx(ctx, tx, transfer.ItemID, transfer.FromWarehouseID, -transfer.Quantity); err != nil {
+		return fmt.Errorf("decrease source stock: %w", err)
+	}
+	if err := adjustStockTx(ctx, tx, transfer.ItemID, transfer.ToWarehouseID, transfer.Quantity); err != nil {
+		return fmt.Errorf("increase destination stock: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO stock_transfer (
+			item_id,
+			from_warehouse_id,
+			to_warehouse_id,
+			quantity,
+			transferred_at,
+			note
+		) VALUES ($1, $2, $3, $4, COALESCE($5, NOW()), $6)
+	`, transfer.ItemID, transfer.FromWarehouseID, transfer.ToWarehouseID, transfer.Quantity, nullableTime(transfer.TransferredAt), transfer.Note)
+	if err != nil {
+		return fmt.Errorf("insert stock transfer: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit stock transfer: %w", err)
+	}
+
+	s.log.Info().
+		Int("item_id", transfer.ItemID).
+		Int("from_warehouse_id", transfer.FromWarehouseID).
+		Int("to_warehouse_id", transfer.ToWarehouseID).
+		Int("quantity", transfer.Quantity).
+		Msg("Межскладское перемещение успешно создано")
+	return nil
+}
+
+func (s *StockService) GetStockTransfers(ctx context.Context) ([]model.StockTransferDetails, error) {
+	var result []model.StockTransferDetails
+	err := s.db.SelectContext(ctx, &result, `
+		SELECT
+			t.transfer_id,
+			t.item_id,
+			t.from_warehouse_id,
+			t.to_warehouse_id,
+			to_char(t.transferred_at, 'YYYY-MM-DD') AS date,
+			i.name AS item_name,
+			i.sku,
+			wf.name AS from_warehouse,
+			wt.name AS to_warehouse,
+			t.quantity,
+			COALESCE(t.note, '') AS note
+		FROM stock_transfer t
+		JOIN item i ON i.item_id = t.item_id
+		JOIN warehouse wf ON wf.warehouse_id = t.from_warehouse_id
+		JOIN warehouse wt ON wt.warehouse_id = t.to_warehouse_id
+		ORDER BY t.transferred_at DESC, t.transfer_id DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("load stock transfers: %w", err)
+	}
+
 	return result, nil
 }
